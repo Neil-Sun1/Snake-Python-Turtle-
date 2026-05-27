@@ -1,12 +1,25 @@
 from turtle import *
 from random import randint
 
-
 screen = Screen()
 screen.setup(600, 600)
 screen.bgcolor('black')
 screen.title("Snake Game")
-screen.tracer(0) 
+screen.tracer(0)
+
+def playing_area():
+    t = Turtle()
+    t.speed(0)
+    t.ht()
+    t.pu()
+    t.goto(-250, 250)
+    t.color('light blue')
+    t.pd()
+    t.begin_fill()
+    for i in range(4):
+        t.forward(500)
+        t.right(90)
+    t.end_fill()
 
 class Head(Turtle):
     def __init__(self):
@@ -26,6 +39,7 @@ class Head(Turtle):
             self.setx(self.xcor() - 20)
         elif self.direction == "right":
             self.setx(self.xcor() + 20)
+
     def go_up(self):
         if self.direction != "down":
             self.direction = "up"
@@ -43,14 +57,13 @@ class Head(Turtle):
             self.direction = "right"
 
 class Segment(Turtle):
-    def __init__(self, body_list):
+    def __init__(self, x_pos, y_pos):
         super().__init__()
         self.shape("square")
         self.color("green")
         self.pu()
         self.speed(0)
-        last_element = body_list[-1]
-        self.goto(last_element.xcor(), last_element.ycor())
+        self.goto(x_pos, y_pos)
 
 class Apple(Turtle):
     def __init__(self):
@@ -62,36 +75,54 @@ class Apple(Turtle):
         self.relocate()
 
     def relocate(self):
-        x = randint(-14, 14) * 20
-        y = randint(-14, 14) * 20
+        x = randint(-11, 11) * 20
+        y = randint(-11, 11) * 20
         self.goto(x, y)
 
+playing_area()
 head = Head()
-apple = Apple()
-
 
 body = []
 body.append(head)
-body.append(Segment(body))
-body.append(Segment(body))
 
+apple = Apple()
 
 screen.listen()
 screen.onkey(head.go_up, "Up")
 screen.onkey(head.go_down, "Down")
 screen.onkey(head.go_left, "Left")
 screen.onkey(head.go_right, "Right")
+
 def game_loop():
-    for index in range(len(body) - 1, 0, -1):
-        front_segment = body[index - 1]
-        body[index].goto(front_segment.xcor(), front_segment.ycor())
+    if head.xcor() <= -250 or head.xcor() >= 250 or head.ycor() <= -250 or head.ycor() >= 250:
+        return
+
+    if head.direction != "stop":
+        for segment in body[1:]:
+            if head.distance(segment) < 15:
+                return
+
+    old_positions = []
+    for b in body:
+        old_positions.append((b.xcor(), b.ycor()))
+
     head.move()
+
+    if head.xcor() <= -250 or head.xcor() >= 250 or head.ycor() <= -250 or head.ycor() >= 250:
+        return
+
+    for index in range(1, len(body)):
+        body[index].goto(old_positions[index - 1][0], old_positions[index - 1][1])
+
     if head.distance(apple) < 20:
         apple.relocate()
-        new_segment = Segment(body)
+        tail_pos = old_positions[-1]
+        new_segment = Segment(tail_pos[0], tail_pos[1])
         body.append(new_segment)
     
     screen.update()
-    screen.ontimer(game_loop,100)
+    screen.ontimer(game_loop, 100)
+
+screen.update()
 game_loop()
 screen.mainloop()
