@@ -125,4 +125,4 @@ def game_loop():
 
 screen.update()
 game_loop()
-screen.mainloop()
+screen.exitonclick()
